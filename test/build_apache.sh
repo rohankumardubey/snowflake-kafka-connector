@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export SNOWFLAKE_CREDENTIAL_FILE=/Users/zefan/kafka/snowflake-kafka-connector/profile.json
+#export SNOWFLAKE_CREDENTIAL_FILE=/Users/zefan/kafka/snowflake-kafka-connector/profile.json
 
 # exit on error
 set -e
