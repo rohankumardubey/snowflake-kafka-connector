@@ -506,10 +506,14 @@ public class SnowflakeSinkServiceV2 implements SnowflakeSinkService {
 
   private void createTableIfNotExists(final String tableName) {
     if (this.conn.tableExist(tableName)) {
-      if (this.conn.isTableCompatible(tableName)) {
-        LOGGER.info("Using existing table {}.", tableName);
+      if (!this.enableSchematization) {
+        if (this.conn.isTableCompatible(tableName)) {
+          LOGGER.info("Using existing table {}.", tableName);
+        } else {
+          throw SnowflakeErrors.ERROR_5003.getException("table name: " + tableName);
+        }
       } else {
-        throw SnowflakeErrors.ERROR_5003.getException("table name: " + tableName);
+        this.conn.appendMetaColIfNotExist(tableName);
       }
     } else {
       LOGGER.info("Creating new table {}.", tableName);

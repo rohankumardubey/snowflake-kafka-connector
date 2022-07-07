@@ -239,4 +239,6 @@ public interface SnowflakeConnectionService {
   Connection getConnection();
 
   void createTableWithSchema(String tableName, final Map<String, String> schema);
+
+  void appendMetaColIfNotExist(String tableName);
 }
