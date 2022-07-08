@@ -1,7 +1,6 @@
 package com.snowflake.kafka.connector.internal;
 
 import com.snowflake.kafka.connector.internal.telemetry.SnowflakeTelemetryService;
-import io.confluent.kafka.schemaregistry.avro.AvroSchema;
 
 import java.sql.Connection;
 import java.util.List;
@@ -214,16 +213,22 @@ public interface SnowflakeConnectionService {
    * @param content file content
    */
   void putToTableStage(String tableName, String fileName, byte[] content);
-  /** @return telemetry client */
+  /**
+   * @return telemetry client
+   */
   SnowflakeTelemetryService getTelemetryClient();
 
   /** Close Connection */
   void close();
 
-  /** @return true is connection is closed */
+  /**
+   * @return true is connection is closed
+   */
   boolean isClosed();
 
-  /** @return name of Kafka Connector instance */
+  /**
+   * @return name of Kafka Connector instance
+   */
   String getConnectorName();
 
   /**
@@ -235,7 +240,9 @@ public interface SnowflakeConnectionService {
    */
   SnowflakeIngestionService buildIngestService(String stageName, String pipeName);
 
-  /** @return the raw jdbc connection */
+  /**
+   * @return the raw jdbc connection
+   */
   Connection getConnection();
 
   void createTableWithSchema(String tableName, final Map<String, String> schema);

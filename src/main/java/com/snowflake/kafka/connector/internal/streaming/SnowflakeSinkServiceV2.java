@@ -1,9 +1,5 @@
 package com.snowflake.kafka.connector.internal.streaming;
 
-import static com.snowflake.kafka.connector.SnowflakeSinkConnectorConfig.BUFFER_SIZE_BYTES_DEFAULT;
-import static com.snowflake.kafka.connector.internal.streaming.StreamingUtils.STREAMING_BUFFER_COUNT_RECORDS_DEFAULT;
-import static com.snowflake.kafka.connector.internal.streaming.StreamingUtils.STREAMING_BUFFER_FLUSH_TIME_DEFAULT_SEC;
-
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.annotations.VisibleForTesting;
 import com.snowflake.kafka.connector.SnowflakeSinkConnectorConfig;
@@ -16,17 +12,12 @@ import com.snowflake.kafka.connector.internal.SnowflakeSinkService;
 import com.snowflake.kafka.connector.internal.telemetry.SnowflakeTelemetryService;
 import com.snowflake.kafka.connector.records.RecordService;
 import com.snowflake.kafka.connector.records.SnowflakeMetadataConfig;
-
+import io.confluent.connect.avro.AvroConverterConfig;
 import io.confluent.kafka.schemaregistry.avro.AvroSchema;
 import io.confluent.kafka.schemaregistry.avro.AvroSchemaProvider;
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaMetadata;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
-
-import io.confluent.connect.avro.AvroConverterConfig;
-
-import java.util.*;
-
 import net.snowflake.ingest.streaming.SnowflakeStreamingIngestClient;
 import net.snowflake.ingest.streaming.SnowflakeStreamingIngestClientFactory;
 import net.snowflake.ingest.utils.SFException;
@@ -37,6 +28,12 @@ import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.*;
+
+import static com.snowflake.kafka.connector.SnowflakeSinkConnectorConfig.BUFFER_SIZE_BYTES_DEFAULT;
+import static com.snowflake.kafka.connector.internal.streaming.StreamingUtils.STREAMING_BUFFER_COUNT_RECORDS_DEFAULT;
+import static com.snowflake.kafka.connector.internal.streaming.StreamingUtils.STREAMING_BUFFER_FLUSH_TIME_DEFAULT_SEC;
 
 /**
  * This is per task configuration. A task can be assigned multiple partitions. Major methods are
@@ -137,7 +134,9 @@ public class SnowflakeSinkServiceV2 implements SnowflakeSinkService {
     this.connectorConfig = connectorConfig;
 
     if (connectorConfig.containsKey(SnowflakeSinkConnectorConfig.SCHEMATIZATION_ENABLE_CONFIG)) {
-      this.enableSchematization = Boolean.parseBoolean(connectorConfig.get(SnowflakeSinkConnectorConfig.SCHEMATIZATION_ENABLE_CONFIG));
+      this.enableSchematization =
+          Boolean.parseBoolean(
+              connectorConfig.get(SnowflakeSinkConnectorConfig.SCHEMATIZATION_ENABLE_CONFIG));
     }
 
     this.recordService.setSchematizationEnable(this.enableSchematization);
@@ -517,9 +516,11 @@ public class SnowflakeSinkServiceV2 implements SnowflakeSinkService {
       }
     } else {
       LOGGER.info("Creating new table {}.", tableName);
-      if (connectorConfig.containsKey("value.converter") &&
-      connectorConfig.get("value.converter").equals("io.confluent.connect.avro.AvroConverter") &&
-      this.enableSchematization) {
+      if (connectorConfig.containsKey("value.converter")
+          && connectorConfig
+              .get("value.converter")
+              .equals("io.confluent.connect.avro.AvroConverter")
+          && this.enableSchematization) {
         Map<String, String> fields = GetSchema(tableName);
         this.conn.createTableWithSchema(tableName, fields);
       } else {
@@ -529,18 +530,18 @@ public class SnowflakeSinkServiceV2 implements SnowflakeSinkService {
   }
 
   private Map<String, String> GetSchema(final String tableName) {
-    Map <String, String> srConfig = new HashMap<>();
+    Map<String, String> srConfig = new HashMap<>();
     srConfig.put("schema.registry.url", connectorConfig.get("value.converter.schema.registry.url"));
     AvroConverterConfig avroConverterConfig = new AvroConverterConfig(srConfig);
-    SchemaRegistryClient schemaRegistry = new CachedSchemaRegistryClient(
+    SchemaRegistryClient schemaRegistry =
+        new CachedSchemaRegistryClient(
             avroConverterConfig.getSchemaRegistryUrls(),
             avroConverterConfig.getMaxSchemasPerSubject(),
             Collections.singletonList(new AvroSchemaProvider()),
             srConfig,
-            avroConverterConfig.requestHeaders()
-    );
+            avroConverterConfig.requestHeaders());
 
-    Map <String, String> schemaMap = new HashMap<>();
+    Map<String, String> schemaMap = new HashMap<>();
     for (Map.Entry<String, String> entry : topicToTableMap.entrySet()) {
       if (entry.getValue().equals(tableName)) {
         String topicName = entry.getKey();
@@ -549,9 +550,7 @@ public class SnowflakeSinkServiceV2 implements SnowflakeSinkService {
         try {
           schemaMeta = schemaRegistry.getLatestSchemaMetadata(subjectName);
         } catch (Exception e) {
-          LOGGER.error(
-                  Logging.logMessage(
-                          "Failure getting latest schema"));
+          LOGGER.error(Logging.logMessage("Failure getting latest schema"));
         }
         if (schemaMeta != null) {
           AvroSchema schema = new AvroSchema(schemaMeta.getSchema());

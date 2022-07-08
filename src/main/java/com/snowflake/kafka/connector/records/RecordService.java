@@ -16,17 +16,9 @@
  */
 package com.snowflake.kafka.connector.records;
 
-import static com.snowflake.kafka.connector.Utils.TABLE_COLUMN_CONTENT;
-import static com.snowflake.kafka.connector.Utils.TABLE_COLUMN_METADATA;
-
 import com.snowflake.kafka.connector.SnowflakeSinkConnectorConfig;
 import com.snowflake.kafka.connector.internal.Logging;
 import com.snowflake.kafka.connector.internal.SnowflakeErrors;
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
 import net.snowflake.client.jdbc.internal.fasterxml.jackson.core.JsonProcessingException;
 import net.snowflake.client.jdbc.internal.fasterxml.jackson.databind.JsonNode;
 import net.snowflake.client.jdbc.internal.fasterxml.jackson.databind.ObjectMapper;
@@ -34,11 +26,19 @@ import net.snowflake.client.jdbc.internal.fasterxml.jackson.databind.node.ArrayN
 import net.snowflake.client.jdbc.internal.fasterxml.jackson.databind.node.JsonNodeFactory;
 import net.snowflake.client.jdbc.internal.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.kafka.common.record.TimestampType;
-import org.apache.kafka.connect.data.*;
 import org.apache.kafka.connect.data.Date;
+import org.apache.kafka.connect.data.*;
 import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.header.Headers;
 import org.apache.kafka.connect.sink.SinkRecord;
+
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import static com.snowflake.kafka.connector.Utils.TABLE_COLUMN_CONTENT;
+import static com.snowflake.kafka.connector.Utils.TABLE_COLUMN_METADATA;
 
 public class RecordService extends Logging {
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -86,7 +86,9 @@ public class RecordService extends Logging {
     metadataConfig = metadataConfigIn;
   }
 
-  public void setSchematizationEnable(boolean schematizationEnableIn) { schematizationEnable = schematizationEnableIn; }
+  public void setSchematizationEnable(boolean schematizationEnableIn) {
+    schematizationEnable = schematizationEnableIn;
+  }
   /**
    * process given SinkRecord, only support snowflake converters
    *
@@ -182,7 +184,10 @@ public class RecordService extends Logging {
           while (fieldNames.hasNext()) {
             String fieldName = fieldNames.next();
             JsonNode fieldNode = node.get(fieldName);
-            String filedContent = fieldNode.isTextual() ? fieldNode.textValue() : MAPPER.writeValueAsString(fieldNode);
+            String filedContent =
+                fieldNode.isTextual()
+                    ? fieldNode.textValue()
+                    : MAPPER.writeValueAsString(fieldNode);
             streamingIngestRow.put(fieldName, filedContent);
           }
         } else {
